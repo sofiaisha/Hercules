@@ -5473,6 +5473,14 @@ void char_hp_symbols(void) {
 	HPM->share(sql_handle,"sql_handle");
 }
 
+/**
+ * Initializes the command line arguments handlers.
+ */
+void cmdline_args_init_local(void)
+{
+	// TODO
+}
+
 int do_init(int argc, char **argv) {
 	int i;
 	memset(&skillid2idx, 0, sizeof(skillid2idx));
@@ -5485,33 +5493,17 @@ int do_init(int argc, char **argv) {
 
 	HPM_char_do_init();
 	HPM->symbol_defaults_sub = char_hp_symbols;
-#if 0
-	/* TODO: Move to common code */
-	for( i = 1; i < argc; i++ ) {
-		const char* arg = argv[i];
-		if( strcmp(arg, "--load-plugin") == 0 ) {
-			if( map->arg_next_value(arg, i, argc, true) ) {
-				RECREATE(load_extras, char *, ++load_extras_count);
-				load_extras[load_extras_count-1] = argv[++i];
-			}
-		}
-	}
-	HPM->config_read((const char * const *)load_extras, load_extras_count);
-	if (load_extras) {
-		aFree(load_extras);
-		load_extras = NULL;
-		load_extras_count = 0;
-	}
-#endif
-	HPM->config_read(NULL, 0);
+	cmdline->exec(argc, argv, CMDLINE_OPT_PREINIT);
+	HPM->config_read();
 	HPM->event(HPET_PRE_INIT);
 	
 	//Read map indexes
 	mapindex->init();
 	start_point.map = mapindex->name2id("new_zone01");
-		
-	char_config_read((argc < 2) ? CHAR_CONF_NAME : argv[1]);
-	char_lan_config_read((argc > 3) ? argv[3] : LAN_CONF_NAME);
+
+	cmdline->exec(argc, argv, CMDLINE_OPT_NORMAL);
+	char_config_read((argc < 2) ? CHAR_CONF_NAME : argv[1]); // TODO: Move to the command line args handler
+	char_lan_config_read((argc > 3) ? argv[3] : LAN_CONF_NAME); // TODO: Move to the command line args handler
 	sql_config_read(SQL_CONF_NAME);
 
 	if (strcmp(userid, "s1")==0 && strcmp(passwd, "p1")==0) {
@@ -5520,7 +5512,7 @@ int do_init(int argc, char **argv) {
 		ShowNotice("And then change the user/password to use in conf/char-server.conf (or conf/import/char_conf.txt)\n");
 	}
 	
-	inter_init_sql((argc > 2) ? argv[2] : inter_cfgName); // inter server configuration
+	inter_init_sql((argc > 2) ? argv[2] : inter_cfgName); // inter server configuration // TODO: Move to the command line args handlerE
 
 	auth_db = idb_alloc(DB_OPT_RELEASE_DATA);
 	online_char_db = idb_alloc(DB_OPT_RELEASE_DATA);
